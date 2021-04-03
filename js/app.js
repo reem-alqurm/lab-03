@@ -1,92 +1,98 @@
-'use strict';
-let templateId = '#photo-template';
-let allAnimals =[];
-let newArr=[];
-function GalleryofHorns (animal){
-  this.image_url = animal.image_url;
-  this.title = animal.title;
-  this.description =animal.description;
-  this.keyword = animal.keyword;
-  this.horns = animal.horns;
-  allAnimals.push(this);
-}
+'use strict'
 
 
+const keywordArr= [];
 
-GalleryofHorns.prototype.render = function () {
-    // let $anaimalClone = $('.photo-template').clone();
-    // $('main').append($anaimalClone);
-    // $anaimalClone.find('h2').text(this.title);
-    // $anaimalClone.find('img').attr('src', this.image_url);
-    // $anaimalClone.find('p').text(this.description);
-    // // $anaimalClone.removeClass('photo-template');
-    // // $anaimalClone.attr('class', this.title);
+function ImgStorage(image_url, title, description, keyword, horns) {
+    this.image_url = image_url;
+    this.title = title;
+    this.description = description;
+    this.keyword = keyword;
+    this.horns = horns;
 
-    let template = $(templateId).html();
-    let html = Mustache.render(template,this);
-    console.log(html);
-    return html;
-
-    // let title = `<div><h2> Name : ${this.title}</h2></div>`
-    // $('main').append(title)
-    // let img = $('<img></img>').attr('src', this.image_url)
-    // $('main').append(img);
-    // let description = `<div><p> Discribtion : ${this.description}</p></div>`
-    // $('main').append(description)
-    // let numHorn = `<div><p> Number of Horns : ${this.horns}</p></div>`
-    // $('main').append(numHorn)
-    
-
-    // let selectop = $('<option></option>').text(this.keyword);
-    // selectop.attr ('value', this.keyword);
-    
-    // if (newArr.includes(this.keyword)){}
-    // else{
-    // newArr.push(this.keyword);
-    // $('.selectid').append(selectop);}
+    ImgStorage.allimageStorage.push(this);
   }
-    const ajaxSettings = {
-      method: 'get',
-      dataType: 'json'
-    };
-
-$( document ).ready(function() {
+  ImgStorage.allimageStorage = [];
 
 
-    $.ajax('../data/page-1.json', ajaxSettings)
 
-      .then(data => { 
-        data.forEach(item => {
-          // let hornanimal = new GalleryofHorns(item);
-          // console.log (hornanimal);
+ImgStorage.prototype.renderWithJQueryAndMustache = function() {
 
-            allAnimals.push(new GalleryofHorns(item));
-          });
+  const imgTemplateHtml = $('#mustache-template-section').html();
+  const outputFromMustache = Mustache.render(imgTemplateHtml, this); 
+  $('body > section').append(outputFromMustache);   
+};
 
-          allAnimals.forEach(item => {
-            $('#photo-template').append(item.render());
-          });
-        });
+function objectFile(arrayObject) {    
+    arrayObject.forEach(animalPic => {
+    new ImgStorage(animalPic.image_url, animalPic.title, animalPic.description, animalPic.keyword, animalPic.horns);
+    
+            if ($(`select:contains(${animalPic.keyword})`).length === 0){
+            renderAnimalOptions(animalPic.keyword);
+            }
+    });
+    ImgStorage.allimageStorage.forEach(imgStorage => imgStorage.renderWithJQueryAndMustache());
+  }
 
-       
-       
+function renderAnimalOptions(dropdownOptions){
+    $('select').append('<option>' + dropdownOptions + '</option>');
+  }
+
+  function filterSelection(event) {
+  $('body > section').empty();
+
+  ImgStorage.allimageStorage.forEach(animalpic => {
+    if (animalpic.keyword === event.target.value){
+            animalpic.renderWithJQueryAndMustache()
+        }
+      })
+    }
+
+
+
+$.ajax('data/page-1.json').then(objectFile); 
+
+$('select').on('change', filterSelection);
+
+$('#sort-button').on('click', function(){
+  $('body > section').empty();
+  
+  ImgStorage.allimageStorage.sort(function(l, r) {
+  
+    if (l.horns > r.horns) {
+        return 1
+    } else if (l.horns < r.horns) {
+        return -1
+    } else { 
+        if (l.keyword > r.keyword) {
+          return 1
+      } else if (l.keyword < r.keyword) {
+          return -1
+      } else {
+          return 0
+      }
+    }
+  })
+
+  ImgStorage.allimageStorage.forEach(imgStorage => imgStorage.renderWithJQueryAndMustache());
 });
 
 
-  
-   // $('.selectid').on('click', function () {
-        //     let valueEl = $('.selectid').val();
-        //     $('main').empty();
-        //     data.forEach(item => {
-        //         if (valueEl === 'default'){
-        //             let b =new GalleryofHorns(item);
-        //              b.render();
-        //         }
-        //         else if ( item.keyword === valueEl)
-        //         {
-        //             let a=new GalleryofHorns(item);
-        //             a.render();
+  $('#lab-02').on('click', function() {
+    $('select').empty();
+    $('body > section').empty();
+    ImgStorage.allimageStorage = [];
+    $.ajax('data/page-1.json').then(objectFile); 
+  })
 
-        //         }
-        //     })
-        // });
+
+  $('#lab-03').on('click', function() {
+    $('select').empty();
+    $('body > section').empty();
+    ImgStorage.allimageStorage = [];
+
+    $.ajax('data/page-2.json').then(objectFile); 
+
+
+  })
+
